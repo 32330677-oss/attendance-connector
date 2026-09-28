@@ -47,6 +47,11 @@ async function request(method, endpoint, body) {
   }
 
   if (!response.ok) {
+    const alreadyCompleted =
+      response.status === 409 &&
+      data?.message ===
+        'This batch is already completed.';
+
     throw Object.assign(
       new Error(
         data?.message ||
@@ -54,6 +59,8 @@ async function request(method, endpoint, body) {
       ),
       {
         status: response.status,
+
+        alreadyCompleted,
 
         // Keep the file in incoming for:
         // - server/network problems

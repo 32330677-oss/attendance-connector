@@ -119,29 +119,50 @@ async function importFile(filePath) {
   }
 
   // Send punches in chunks.
-  for (
-    let index = 0;
-    index < punches.length;
-    index += config.chunkSize
-  ) {
-    const chunk = punches.slice(
-      index,
-      index + config.chunkSize
-    );
+for (
+  let index = 0;
+  index < punches.length;
+  index += config.chunkSize
+) {
+  const chunk = punches.slice(
+    index,
+    index + config.chunkSize
+  );
 
-    const result = await api.sendPunches(
+  let result;
+
+  try {
+    result = await api.sendPunches(
       batch.batchId,
       chunk
     );
+  } catch (error) {
+    if (error.alreadyCompleted) {
+      log.info(
+        `${fileName}: batch #${batch.batchId} ` +
+        'is already completed. ' +
+        'Moving file to processed.'
+      );
 
-    log.info(
-      `${fileName}: chunk ` +
-      `${Math.floor(index / config.chunkSize) + 1} ` +
-      `-> inserted ${result.inserted}, ` +
-      `duplicates ${result.duplicates}, ` +
-      `rejected ${result.errors}`
-    );
+      moveTo(
+        filePath,
+        config.processed
+      );
+
+      return;
+    }
+
+    throw error;
   }
+
+  log.info(
+    `${fileName}: chunk ` +
+    `${Math.floor(index / config.chunkSize) + 1} ` +
+    `-> inserted ${result.inserted}, ` +
+    `duplicates ${result.duplicates}, ` +
+    `errors ${result.errors}`
+  );
+}
 
   const result = await api.completeBatch(
     batch.batchId,
