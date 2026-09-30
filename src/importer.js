@@ -164,16 +164,15 @@ for (
   );
 }
 
-  const result = await api.completeBatch(
-    batch.batchId,
-    {
-      totalRows,
-      validRows: punches.length,
-      errorRows: errors.length,
-      errors,
-    }
-  );
-
+ const result = await api.completeBatch(
+  batch.batchId,
+  {
+    totalRows,
+    validRows: punches.length,
+    errorRows: errors.length,
+    errors: errors.slice(0, 50),
+  }
+);
   log.info(
     `${fileName}: batch #${batch.batchId} ` +
     `${result.batchStatus} ` +
